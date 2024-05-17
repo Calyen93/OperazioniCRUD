@@ -1,7 +1,7 @@
 package com.example.operazioniCRUD.controller;
 
 import com.example.operazioniCRUD.model.Car;
-import com.example.operazioniCRUD.repository.CarRepository;
+import com.example.operazioniCRUD.service.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,44 +15,33 @@ import java.util.Optional;
 public class CarController {
 
     @Autowired
-    private CarRepository carRepository;
+    private CarService carService;
 
     @PostMapping
     public Car createCar(@RequestBody Car car) {
-        return carRepository.save(car);
+        return carService.createCar(car);
     }
 
     @GetMapping
     public List<Car> getAllCars() {
-        return carRepository.findAll();
+        return carService.getAllCars();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Car> getCarById(@PathVariable Long id) {
-        Optional<Car> car = carRepository.findById(id);
-        if (car.isPresent()) {
-            return ResponseEntity.ok(car.get());
-        } else {
-            return ResponseEntity.ok(new Car());
-        }
+        Optional<Car> car = carService.getCarById(id);
+        return car.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.ok(new Car()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Car> updateCarType(@PathVariable Long id, @RequestParam String type) {
-        if (carRepository.existsById(id)) {
-            Car car = carRepository.findById(id).get();
-            car.setType(type);
-            carRepository.save(car);
-            return ResponseEntity.ok(car);
-        } else {
-            return ResponseEntity.ok(new Car());
-        }
+        Car updatedCar = carService.updateCarType(id, type);
+        return ResponseEntity.ok(updatedCar);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCarById(@PathVariable Long id) {
-        if (carRepository.existsById(id)) {
-            carRepository.deleteById(id);
+        if (carService.deleteCarById(id)) {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -61,6 +50,6 @@ public class CarController {
 
     @DeleteMapping
     public void deleteAllCars() {
-        carRepository.deleteAll();
+        carService.deleteAllCars();
     }
 }
